@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Passkeys &amp; Tesla Browser Authentication</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #000;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.7;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .back-link {
+      display: inline-block;
+      color: #3e82f7;
+      text-decoration: none;
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: #888;
+      margin-bottom: 3rem;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #fff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid #222;
+    }
+
+    p {
+      margin-bottom: 1.2rem;
+      color: #ccc;
+    }
+
+    .highlight-box {
+      background: #111;
+      border-left: 3px solid #3e82f7;
+      padding: 1.2rem 1.5rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+    }
+
+    .highlight-box p {
+      margin-bottom: 0;
+      color: #ddd;
+    }
+
+    ul, ol {
+      margin-bottom: 1.2rem;
+      padding-left: 1.5rem;
+    }
+
+    li {
+      margin-bottom: 0.6rem;
+      color: #ccc;
+    }
+
+    .flow-diagram {
+      background: #0a0a0a;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+      text-align: center;
+    }
+
+    .flow-step {
+      display: inline-block;
+      background: #151515;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 0.8rem 1.2rem;
+      margin: 0.4rem;
+      font-size: 0.9rem;
+      color: #e0e0e0;
+    }
+
+    .flow-arrow {
+      display: inline-block;
+      color: #3e82f7;
+      font-size: 1.4rem;
+      margin: 0 0.3rem;
+      vertical-align: middle;
+    }
+
+    .challenge-box {
+      background: #1a1000;
+      border-left: 3px solid #f5a623;
+      padding: 1.2rem 1.5rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+    }
+
+    .challenge-box p {
+      margin-bottom: 0;
+      color: #ddc;
+    }
+
+    .solution-box {
+      background: #001a0a;
+      border-left: 3px solid #34c759;
+      padding: 1.2rem 1.5rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+    }
+
+    .solution-box p {
+      margin-bottom: 0;
+      color: #cddcc;
+    }
+
+    code {
+      background: #1a1a1a;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: #f0f0f0;
+    }
+
+    footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid #222;
+      color: #555;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-link">← Back to Login</a>
+
+    <h1>Passkeys</h1>
+    <p class="subtitle">A modern authentication approach for the Tesla browser</p>
+
+    <h2>What Are Passkeys?</h2>
+    <p>
+      Passkeys are a passwordless authentication standard built on the <strong>WebAuthn</strong> (Web Authentication) API. Instead of typing a password, your device proves your identity using public-key cryptography — the same math that secures HTTPS connections.
+    </p>
+    <p>
+      When you create a passkey, your device generates a unique key pair:
+    </p>
+    <ul>
+      <li><strong>Private key</strong> — stays on your device, never leaves, never shared</li>
+      <li><strong>Public key</strong> — sent to the website and stored on their server</li>
+    </ul>
+    <p>
+      To log in, the server sends a challenge. Your device signs it with the private key. The server verifies the signature with your public key. No password ever crosses the network.
+    </p>
+
+    <div class="highlight-box">
+      <p>💡 Passkeys are phishing-resistant by design. They're cryptographically bound to the specific website domain, so they can't be tricked into working on a fake lookalike site.</p>
+    </div>
+
+    <h2>How Passkeys Work (Step by Step)</h2>
+
+    <div class="flow-diagram">
+      <div class="flow-step">📱 Phone / Device</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">🔐 Generate Key Pair</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">🌐 Register Public Key</div>
+      <br><br>
+      <div class="flow-step">🌐 Server Sends Challenge</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">📱 Sign with Private Key</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">✅ Verified!</div>
+    </div>
+
+    <ol>
+      <li><strong>Registration:</strong> You visit a site and choose to create a passkey. Your device creates a key pair and sends the public key to the server.</li>
+      <li><strong>Authentication:</strong> When you return, the server sends a random challenge. Your device signs it with the private key (after biometric or PIN confirmation).</li>
+      <li><strong>Verification:</strong> The server checks the signature against your stored public key. If it matches, you're in.</li>
+    </ol>
+
+    <h2>The Tesla Browser Challenge</h2>
+    <p>
+      The Tesla in-car browser is a Chromium-based browser, but it runs in a unique environment with some key constraints:
+    </p>
+
+    <div class="challenge-box">
+      <p>⚠️ <strong>No built-in passkey storage:</strong> The Tesla browser doesn't have a system-level credential manager like Android, iOS, or desktop Chrome. There's no Face ID, fingerprint sensor, or TPM chip in the car.</p>
+    </div>
+
+    <div class="challenge-box">
+      <p>⚠️ <strong>No browser extensions:</strong> You can't install a password manager or authenticator extension in the Tesla browser.</p>
+    </div>
+
+    <div class="challenge-box">
+      <p>⚠️ <strong>Shared device:</strong> The car's browser may be used by multiple drivers. Traditional device-bound credentials don't map cleanly to this model.</p>
+    </div>
+
+    <h2>Cross-Device Authentication: QR Code Flow</h2>
+    <p>
+      This is where the <strong>QR code login</strong> approach comes in. WebAuthn supports a cross-device authentication flow (sometimes called <strong>hybrid transport</strong> or <strong>caBLE</strong>) that works like this:
+    </p>
+
+    <div class="solution-box">
+      <p>✅ The Tesla browser displays a QR code. Your phone — which <em>does</em> have passkey support — scans it, authenticates you via biometrics, and securely relays the credential back to the browser session.</p>
+    </div>
+
+    <ol>
+      <li>The web app on the Tesla screen initiates a WebAuthn authentication request</li>
+      <li>Since no local authenticator is available, it displays a QR code containing a one-time pairing payload</li>
+      <li>The user scans the QR code with their phone (which has passkeys synced via iCloud Keychain, Google Password Manager, etc.)</li>
+      <li>The phone and Tesla browser establish a secure Bluetooth or network-proxied channel</li>
+      <li>The phone performs the passkey authentication (Face ID, fingerprint, etc.)</li>
+      <li>The signed assertion is relayed back to the Tesla browser</li>
+      <li>The server verifies it — user is logged in on the Tesla screen</li>
+    </ol>
+
+    <h2>Why This Matters for Tesla Web Apps</h2>
+    <ul>
+      <li><strong>No typing passwords on the Tesla touchscreen</strong> — the on-screen keyboard is clunky, especially while parked</li>
+      <li><strong>Phishing resistant</strong> — even if someone puts a fake login page on the Tesla browser, passkeys won't work on the wrong domain</li>
+      <li><strong>Per-driver identity</strong> — each driver authenticates with their own phone, enabling personalized app experiences</li>
+      <li><strong>Session management</strong> — the web app can tie sessions to driver profiles and expire them on vehicle logout</li>
+      <li><strong>No shared passwords</strong> — eliminates the "saved password in the car browser" problem</li>
+    </ul>
+
+    <h2>Implementation Considerations</h2>
+    <p>
+      Building this for the Tesla browser requires checking a few things:
+    </p>
+    <ul>
+      <li><strong>WebAuthn API support:</strong> Does the Tesla Chromium build expose <code>navigator.credentials</code>? If so, the standard cross-device flow may work natively.</li>
+      <li><strong>Bluetooth availability:</strong> The standard caBLE protocol uses BLE for proximity verification. If Tesla's browser sandbox blocks Bluetooth, a network-relay fallback is needed.</li>
+      <li><strong>Custom QR flow:</strong> If native WebAuthn cross-device isn't available, the app can implement its own QR-based authentication — the Tesla screen shows a code, the phone hits an API endpoint, and the browser polls or uses WebSockets to detect the completed auth.</li>
+      <li><strong>Session tokens:</strong> Once authenticated, store a session token in the browser's <code>localStorage</code> or a cookie to avoid re-scanning every page load.</li>
+    </ul>
+
+    <div class="highlight-box">
+      <p>💡 Even if the Tesla browser doesn't support the full WebAuthn hybrid flow natively, a custom implementation using QR codes + phone-based authentication achieves the same user experience — scan, approve, done.</p>
+    </div>
+
+    <footer>
+      <p>Prototype reference — Tesla Browser Login System</p>
+    </footer>
+  </div>
+</body>
+</html>
