@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebAuthn Live Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #000;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.7;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .back-link {
+      display: inline-block;
+      color: #3e82f7;
+      text-decoration: none;
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: #888;
+      margin-bottom: 2.5rem;
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #fff;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: #ccc;
+    }
+
+    /* Support check banner */
+    .support-banner {
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      margin-bottom: 2.5rem;
+      font-size: 0.95rem;
+    }
+
+    .support-banner.supported {
+      background: #001a0a;
+      border: 1px solid #1a3d2a;
+      color: #6fdc8c;
+    }
+
+    .support-banner.unsupported {
+      background: #1a0000;
+      border: 1px solid #3d1a1a;
+      color: #dc6f6f;
+    }
+
+    /* Demo sections */
+    .demo-section {
+      background: #0a0a0a;
+      border: 1px solid #1a1a1a;
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+    }
+
+    .step-indicator {
+      display: inline-block;
+      background: #3e82f7;
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 28px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-right: 0.6rem;
+      vertical-align: middle;
+    }
+
+    .step-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #fff;
+      vertical-align: middle;
+    }
+
+    .step-desc {
+      color: #999;
+      font-size: 0.95rem;
+      margin: 0.8rem 0 1.5rem 0;
+    }
+
+    /* Input */
+    .input-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: #151515;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-group input:focus {
+      border-color: #3e82f7;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 0.8rem 1.8rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #3e82f7;
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #5a96ff;
+    }
+
+    .btn-green {
+      background: #34c759;
+      color: #fff;
+    }
+
+    .btn-green:hover:not(:disabled) {
+      background: #4dd96a;
+    }
+
+    /* Log output */
+    .log-area {
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+
+    .log-entry {
+      margin-bottom: 0.3rem;
+      word-break: break-all;
+    }
+
+    .log-entry.info { color: #888; }
+    .log-entry.step { color: #3e82f7; }
+    .log-entry.success { color: #34c759; }
+    .log-entry.error { color: #ff453a; }
+    .log-entry.data { color: #f5a623; }
+
+    /* Status badges */
+    .status {
+      display: inline-block;
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+
+    .status.idle { background: #1a1a1a; color: #666; }
+    .status.active { background: #1a2a1a; color: #34c759; }
+    .status.error { background: #2a1a1a; color: #ff453a; }
+
+    /* Credential display */
+    .credential-card {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .credential-card.visible {
+      display: block;
+    }
+
+    .credential-field {
+      margin-bottom: 0.6rem;
+    }
+
+    .credential-field .label {
+      font-size: 0.75rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .credential-field .value {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: #e0e0e0;
+      word-break: break-all;
+    }
+
+    /* How it works explanation */
+    .explanation {
+      background: #111;
+      border-left: 3px solid #3e82f7;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+    }
+
+    .explanation p {
+      margin-bottom: 0;
+      font-size: 0.92rem;
+    }
+
+    footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid #222;
+      color: #555;
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: #3e82f7;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-link">← Back to Login</a>
+
+    <h1>WebAuthn Live Demo</h1>
+    <p class="subtitle">Try passkey registration and authentication right in your browser</p>
+
+    <div id="support-banner" class="support-banner"></div>
+
+    <div class="explanation">
+      <p>💡 This demo runs entirely in your browser — no server needed. Credentials are created using your device's built-in authenticator (Touch ID, Face ID, Windows Hello, security key, etc.) and stored locally in memory for the session.</p>
+    </div>
+
+    <!-- Step 1: Register -->
+    <div class="demo-section">
+      <span class="step-indicator">1</span>
+      <span class="step-title">Register a Passkey</span>
+      <span id="register-status" class="status idle">Not started</span>
+
+      <p class="step-desc">
+        Create a new credential. Your browser will prompt you to use a biometric, PIN, or security key. This simulates the server calling <code>navigator.credentials.create()</code>.
+      </p>
+
+      <div class="input-group">
+        <label>Username</label>
+        <input type="text" id="username" placeholder="e.g. kyle@tesla.com" value="">
+      </div>
+
+      <button class="btn btn-primary" id="register-btn" onclick="registerPasskey()">
+        🔐 Create Passkey
+      </button>
+
+      <div id="register-credential" class="credential-card">
+        <div class="credential-field">
+          <div class="label">Credential ID</div>
+          <div class="value" id="cred-id"></div>
+        </div>
+        <div class="credential-field">
+          <div class="label">Public Key Algorithm</div>
+          <div class="value" id="cred-algo"></div>
+        </div>
+        <div class="credential-field">
+          <div class="label">Authenticator Type</div>
+          <div class="value" id="cred-type"></div>
+        </div>
+      </div>
+
+      <div id="register-log" class="log-area">
+        <div class="log-entry info">Waiting to start registration...</div>
+      </div>
+    </div>
+
+    <!-- Step 2: Authenticate -->
+    <div class="demo-section">
+      <span class="step-indicator">2</span>
+      <span class="step-title">Authenticate with Passkey</span>
+      <span id="auth-status" class="status idle">Not started</span>
+
+      <p class="step-desc">
+        Log in using the passkey you just created. The server sends a challenge, your device signs it, and the server verifies. This calls <code>navigator.credentials.get()</code>.
+      </p>
+
+      <button class="btn btn-green" id="auth-btn" onclick="authenticatePasskey()" disabled>
+        ✅ Authenticate
+      </button>
+
+      <div id="auth-log" class="log-area">
+        <div class="log-entry info">Register a passkey first, then authenticate.</div>
+      </div>
+    </div>
+
+    <!-- Step 3: What happened -->
+    <div class="demo-section">
+      <span class="step-indicator">3</span>
+      <span class="step-title">What Just Happened?</span>
+
+      <p class="step-desc">A breakdown of the WebAuthn flow you just performed.</p>
+
+      <h2 style="margin-top: 0.5rem;">During Registration</h2>
+      <ol style="padding-left: 1.5rem; margin-bottom: 1.5rem;">
+        <li>The "server" generated a random <strong>challenge</strong> (32 random bytes)</li>
+        <li>Your browser called the <strong>WebAuthn API</strong> with the challenge and user info</li>
+        <li>Your device's authenticator created a <strong>new key pair</strong></li>
+        <li>You approved with <strong>biometrics or PIN</strong></li>
+        <li>The authenticator returned the <strong>public key</strong> and a signed attestation</li>
+        <li>The "server" stored the credential ID and public key</li>
+      </ol>
+
+      <h2>During Authentication</h2>
+      <ol style="padding-left: 1.5rem; margin-bottom: 1.5rem;">
+        <li>The "server" generated a new random <strong>challenge</strong></li>
+        <li>Your browser called WebAuthn with the challenge and the <strong>allowed credential ID</strong></li>
+        <li>Your authenticator found the matching private key</li>
+        <li>You approved with <strong>biometrics or PIN</strong></li>
+        <li>The authenticator <strong>signed the challenge</strong> with the private key</li>
+        <li>The "server" verified the signature using the stored <strong>public key</strong></li>
+      </ol>
+
+      <div class="explanation">
+        <p>🔑 The private key <strong>never left your device</strong>. The server only ever sees the public key and signed challenges. Even if the server is breached, attackers can't impersonate you — they'd need your physical device and your biometric.</p>
+      </div>
+    </div>
+
+    <footer>
+      <p>Part of the <a href="index.html">Tesla Browser Login</a> prototype · <a href="passkeys.html">Learn about passkeys</a></p>
+    </footer>
+  </div>
+
+  <script>
+    // --- State ---
+    let storedCredential = null;
+
+    // --- Feature Detection ---
+    const banner = document.getElementById('support-banner');
+    if (window.PublicKeyCredential) {
+      banner.className = 'support-banner supported';
+      banner.textContent = '✅ Your browser supports WebAuthn — you can try the live demo below.';
+    } else {
+      banner.className = 'support-banner unsupported';
+      banner.textContent = '❌ Your browser does not support WebAuthn. The demo won\'t work here, but you can read through the steps.';
+      document.getElementById('register-btn').disabled = true;
+    }
+
+    // --- Helpers ---
+    function bufferToBase64url(buffer) {
+      const bytes = new Uint8Array(buffer);
+      let str = '';
+      for (const b of bytes) str += String.fromCharCode(b);
+      return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function randomBytes(n) {
+      const buf = new Uint8Array(n);
+      crypto.getRandomValues(buf);
+      return buf;
+    }
+
+    function log(areaId, message, type = 'info') {
+      const area = document.getElementById(areaId);
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `${new Date().toLocaleTimeString()} › ${message}`;
+      area.appendChild(entry);
+      area.scrollTop = area.scrollHeight;
+    }
+
+    function algoName(id) {
+      const names = { '-7': 'ES256 (ECDSA w/ SHA-256)', '-257': 'RS256 (RSASSA-PKCS1-v1_5 w/ SHA-256)' };
+      return names[String(id)] || `Algorithm ${id}`;
+    }
+
+    // --- Registration ---
+    async function registerPasskey() {
+      const username = document.getElementById('username').value.trim();
+      if (!username) {
+        log('register-log', 'Please enter a username first.', 'error');
+        return;
+      }
+
+      const statusEl = document.getElementById('register-status');
+      statusEl.className = 'status active';
+      statusEl.textContent = 'In progress...';
+
+      const regLog = 'register-log';
+      document.getElementById(regLog).innerHTML = '';
+
+      try {
+        // 1. Generate challenge (normally from server)
+        const challenge = randomBytes(32);
+        log(regLog, `Server generated challenge: ${bufferToBase64url(challenge)}`, 'step');
+
+        // 2. Create user ID
+        const userId = randomBytes(16);
+        log(regLog, `User ID created: ${bufferToBase64url(userId)}`, 'step');
+
+        // 3. Build creation options
+        const publicKeyOptions = {
+          challenge: challenge,
+          rp: {
+            name: 'Tesla Login Demo',
+            id: location.hostname
+          },
+          user: {
+            id: userId,
+            name: username,
+            displayName: username.split('@')[0]
+          },
+          pubKeyCredParams: [
+            { alg: -7, type: 'public-key' },   // ES256
+            { alg: -257, type: 'public-key' }   // RS256
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: 'platform',
+            userVerification: 'preferred',
+            residentKey: 'preferred'
+          },
+          timeout: 60000,
+          attestation: 'none'
+        };
+
+        log(regLog, 'Calling navigator.credentials.create() ...', 'step');
+        log(regLog, 'Your browser should prompt for biometric / PIN now.', 'info');
+
+        // 4. Create credential
+        const credential = await navigator.credentials.create({
+          publicKey: publicKeyOptions
+        });
+
+        log(regLog, 'Credential created successfully!', 'success');
+
+        // 5. Parse response
+        const credId = bufferToBase64url(credential.rawId);
+        const attestationObj = credential.response.attestationObject;
+        const clientDataJSON = credential.response.clientDataJSON;
+
+        log(regLog, `Credential ID: ${credId}`, 'data');
+        log(regLog, `Client Data JSON: ${new TextDecoder().decode(clientDataJSON).substring(0, 120)}...`, 'data');
+        log(regLog, `Attestation Object: ${bufferToBase64url(attestationObj).substring(0, 60)}...`, 'data');
+
+        // 6. Store credential (client-side mock of server storage)
+        storedCredential = {
+          id: credential.rawId,
+          credId: credId,
+          type: credential.type,
+          response: credential.response
+        };
+
+        log(regLog, 'Server stored credential ID and public key.', 'success');
+        log(regLog, 'Registration complete! You can now authenticate.', 'success');
+
+        // Update UI
+        statusEl.textContent = 'Complete ✓';
+
+        const credCard = document.getElementById('register-credential');
+        credCard.classList.add('visible');
+        document.getElementById('cred-id').textContent = credId;
+        document.getElementById('cred-algo').textContent = 'ES256 / RS256 (device selected)';
+        document.getElementById('cred-type').textContent = credential.authenticatorAttachment || 'platform';
+
+        document.getElementById('auth-btn').disabled = false;
+
+      } catch (err) {
+        log(regLog, `Error: ${err.message}`, 'error');
+        if (err.name === 'NotAllowedError') {
+          log(regLog, 'User cancelled or the request timed out.', 'info');
+        }
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Failed';
+      }
+    }
+
+    // --- Authentication ---
+    async function authenticatePasskey() {
+      if (!storedCredential) {
+        log('auth-log', 'No credential stored. Register first.', 'error');
+        return;
+      }
+
+      const statusEl = document.getElementById('auth-status');
+      statusEl.className = 'status active';
+      statusEl.textContent = 'In progress...';
+
+      const authLog = 'auth-log';
+      document.getElementById(authLog).innerHTML = '';
+
+      try {
+        // 1. Generate new challenge
+        const challenge = randomBytes(32);
+        log(authLog, `Server generated new challenge: ${bufferToBase64url(challenge)}`, 'step');
+
+        // 2. Build assertion options
+        const assertionOptions = {
+          challenge: challenge,
+          rpId: location.hostname,
+          allowCredentials: [{
+            id: storedCredential.id,
+            type: 'public-key',
+            transports: ['internal', 'hybrid']
+          }],
+          userVerification: 'preferred',
+          timeout: 60000
+        };
+
+        log(authLog, `Allowed credential: ${storedCredential.credId.substring(0, 30)}...`, 'step');
+        log(authLog, 'Calling navigator.credentials.get() ...', 'step');
+        log(authLog, 'Approve with biometric / PIN to sign the challenge.', 'info');
+
+        // 3. Get assertion
+        const assertion = await navigator.credentials.get({
+          publicKey: assertionOptions
+        });
+
+        log(authLog, 'Assertion received!', 'success');
+
+        // 4. Parse response
+        const authData = bufferToBase64url(assertion.response.authenticatorData);
+        const clientDataJSON = new TextDecoder().decode(assertion.response.clientDataJSON);
+        const signature = bufferToBase64url(assertion.response.signature);
+
+        log(authLog, `Authenticator Data: ${authData.substring(0, 60)}...`, 'data');
+        log(authLog, `Client Data: ${clientDataJSON.substring(0, 120)}...`, 'data');
+        log(authLog, `Signature: ${signature.substring(0, 60)}...`, 'data');
+
+        if (assertion.response.userHandle) {
+          log(authLog, `User Handle: ${bufferToBase64url(assertion.response.userHandle)}`, 'data');
+        }
+
+        // 5. "Verify" (in production, server checks signature against stored public key)
+        log(authLog, 'Server verifying signature against stored public key...', 'step');
+
+        // Simulate verification delay
+        await new Promise(r => setTimeout(r, 500));
+
+        log(authLog, '✅ Signature valid — authentication successful!', 'success');
+        log(authLog, 'User is now logged in. Session token would be issued.', 'success');
+
+        statusEl.textContent = 'Authenticated ✓';
+
+      } catch (err) {
+        log(authLog, `Error: ${err.message}`, 'error');
+        if (err.name === 'NotAllowedError') {
+          log(authLog, 'User cancelled or the request timed out.', 'info');
+        }
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Failed';
+      }
+    }
+  </script>
+</body>
+</html>
