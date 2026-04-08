@@ -44,8 +44,10 @@
       box-shadow: 0 0 60px rgba(255, 255, 255, 0.06);
     }
 
-    .qr-wrapper canvas {
+    .qr-wrapper img {
       display: block;
+      width: 280px;
+      height: 280px;
     }
 
     .scan-text {
@@ -67,22 +69,12 @@
   <div class="container">
     <div class="logo">Tesla</div>
     <div class="qr-wrapper">
-      <canvas id="qr-canvas"></canvas>
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=https://tesla.com/login" alt="QR Code">
     </div>
     <div class="scan-text">Scan to Log In</div>
     <div class="sub-text">Use the Tesla app on your phone to scan this code</div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-  <script>
-    QRCode.toCanvas(document.getElementById('qr-canvas'), 'https://tesla.com/login', {
-      width: 280,
-      margin: 0,
-      color: {
-        dark: '#000000',
-        light: '#ffffff'
-      }
-    });
-  </script>
+
 </body>
 </html>
