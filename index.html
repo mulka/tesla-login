@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tesla Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .logo {
+      font-size: 3rem;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      margin-bottom: 3rem;
+      text-transform: uppercase;
+    }
+
+    .qr-wrapper {
+      background: #fff;
+      border-radius: 20px;
+      padding: 24px;
+      display: inline-block;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 0 60px rgba(255, 255, 255, 0.06);
+    }
+
+    .qr-wrapper canvas {
+      display: block;
+    }
+
+    .scan-text {
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: #e0e0e0;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+
+    .sub-text {
+      font-size: 0.95rem;
+      color: #666;
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">Tesla</div>
+    <div class="qr-wrapper">
+      <canvas id="qr-canvas"></canvas>
+    </div>
+    <div class="scan-text">Scan to Log In</div>
+    <div class="sub-text">Use the Tesla app on your phone to scan this code</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+  <script>
+    QRCode.toCanvas(document.getElementById('qr-canvas'), 'https://tesla.com/login', {
+      width: 280,
+      margin: 0,
+      color: {
+        dark: '#000000',
+        light: '#ffffff'
+      }
+    });
+  </script>
+</body>
+</html>
