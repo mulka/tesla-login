@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tesla Browser BLE Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 700px;
+      width: 100%;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: #888;
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .test-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .test-card .label {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .test-card .detail {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
+    .badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .badge.pass { background: #0a3d1a; color: #4ade80; }
+    .badge.fail { background: #3d0a0a; color: #f87171; }
+    .badge.warn { background: #3d2e0a; color: #fbbf24; }
+    .badge.pending { background: #1a1a2e; color: #888; }
+
+    .btn {
+      display: inline-block;
+      background: #3e82f7;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 1rem 2rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      margin-top: 1.5rem;
+      width: 100%;
+      text-align: center;
+    }
+
+    .btn:disabled {
+      background: #222;
+      color: #555;
+      cursor: not-allowed;
+    }
+
+    .btn:hover:not(:disabled) { background: #5a9bff; }
+
+    .log-section {
+      margin-top: 2rem;
+    }
+
+    .log-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #888;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.75rem;
+    }
+
+    #log {
+      background: #0a0a0a;
+      border: 1px solid #1a1a1a;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: #aaa;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .log-entry.info { color: #aaa; }
+    .log-entry.success { color: #4ade80; }
+    .log-entry.error { color: #f87171; }
+    .log-entry.warn { color: #fbbf24; }
+
+    .env-info {
+      background: #0d0d1a;
+      border: 1px solid #1a1a2e;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 2rem;
+      font-size: 0.8rem;
+      color: #666;
+      line-height: 1.8;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+
+    a { color: #3e82f7; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚡ BLE Capability Test</h1>
+    <p class="subtitle">Detecting Web Bluetooth support in this browser</p>
+
+    <div class="env-info" id="envInfo">Gathering environment info...</div>
+
+    <div class="test-card">
+      <div>
+        <div class="label">navigator.bluetooth</div>
+        <div class="detail">Is the Bluetooth API object present?</div>
+      </div>
+      <span class="badge pending" id="test-bt-api">checking...</span>
+    </div>
+
+    <div class="test-card">
+      <div>
+        <div class="label">bluetooth.getAvailability()</div>
+        <div class="detail">Is a Bluetooth adapter available?</div>
+      </div>
+      <span class="badge pending" id="test-bt-avail">checking...</span>
+    </div>
+
+    <div class="test-card">
+      <div>
+        <div class="label">bluetooth.requestDevice()</div>
+        <div class="detail">Can we trigger a BLE device scan?</div>
+      </div>
+      <span class="badge pending" id="test-bt-request">tap button below</span>
+    </div>
+
+    <div class="test-card">
+      <div>
+        <div class="label">Secure Context</div>
+        <div class="detail">HTTPS or localhost (required for Web Bluetooth)</div>
+      </div>
+      <span class="badge pending" id="test-secure">checking...</span>
+    </div>
+
+    <button class="btn" id="scanBtn" onclick="testRequestDevice()">
+      Scan for BLE Devices
+    </button>
+
+    <div class="log-section">
+      <h2>Event Log</h2>
+      <div id="log"></div>
+    </div>
+
+    <a class="back-link" href="index.html">← Back to Tesla Login</a>
+  </div>
+
+  <script>
+    const logEl = document.getElementById('log');
+
+    function log(msg, type = 'info') {
+      const ts = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.className = 'log-entry ' + type;
+      div.textContent = `[${ts}] ${msg}`;
+      logEl.appendChild(div);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function setBadge(id, text, status) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = 'badge ' + status;
+    }
+
+    // Environment info
+    function gatherEnv() {
+      const info = [];
+      info.push('UA: ' + navigator.userAgent);
+      info.push('Platform: ' + (navigator.platform || 'unknown'));
+      info.push('Protocol: ' + location.protocol);
+      info.push('Secure: ' + window.isSecureContext);
+      info.push('Screen: ' + screen.width + '×' + screen.height);
+      if (navigator.connection) {
+        info.push('Connection: ' + (navigator.connection.type || navigator.connection.effectiveType || 'unknown'));
+      }
+      document.getElementById('envInfo').textContent = info.join('\n');
+      log('Environment info collected', 'info');
+    }
+
+    // Test 1: navigator.bluetooth exists
+    function testBluetoothAPI() {
+      if ('bluetooth' in navigator) {
+        setBadge('test-bt-api', 'PRESENT', 'pass');
+        log('navigator.bluetooth is present', 'success');
+        return true;
+      } else {
+        setBadge('test-bt-api', 'MISSING', 'fail');
+        log('navigator.bluetooth is NOT present — Web Bluetooth not supported', 'error');
+        return false;
+      }
+    }
+
+    // Test 2: Bluetooth availability
+    async function testAvailability() {
+      if (!navigator.bluetooth || !navigator.bluetooth.getAvailability) {
+        setBadge('test-bt-avail', 'N/A', 'fail');
+        log('getAvailability() not available', 'error');
+        return;
+      }
+      try {
+        const available = await navigator.bluetooth.getAvailability();
+        if (available) {
+          setBadge('test-bt-avail', 'AVAILABLE', 'pass');
+          log('Bluetooth adapter is available', 'success');
+        } else {
+          setBadge('test-bt-avail', 'NOT AVAILABLE', 'warn');
+          log('Bluetooth adapter not available (may be disabled or not present)', 'warn');
+        }
+      } catch (e) {
+        setBadge('test-bt-avail', 'ERROR', 'fail');
+        log('getAvailability() threw: ' + e.message, 'error');
+      }
+    }
+
+    // Test 3: Secure context
+    function testSecure() {
+      if (window.isSecureContext) {
+        setBadge('test-secure', 'YES', 'pass');
+        log('Running in a secure context (HTTPS)', 'success');
+      } else {
+        setBadge('test-secure', 'NO', 'fail');
+        log('NOT a secure context — Web Bluetooth requires HTTPS', 'error');
+      }
+    }
+
+    // Test 4: requestDevice (requires user gesture)
+    async function testRequestDevice() {
+      const btn = document.getElementById('scanBtn');
+      btn.disabled = true;
+      btn.textContent = 'Scanning...';
+
+      if (!navigator.bluetooth) {
+        setBadge('test-bt-request', 'NO API', 'fail');
+        log('Cannot scan: navigator.bluetooth not present', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Scan for BLE Devices';
+        return;
+      }
+
+      try {
+        log('Calling requestDevice() with acceptAllDevices...', 'info');
+        const device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: []
+        });
+
+        setBadge('test-bt-request', 'SUCCESS', 'pass');
+        log('Device selected: ' + device.name + ' (id: ' + device.id + ')', 'success');
+
+        // Try to detect if it's a Tesla
+        if (device.name && device.name.toLowerCase().includes('tesla')) {
+          log('🚗 This looks like a Tesla device!', 'success');
+        }
+
+      } catch (e) {
+        if (e.name === 'NotFoundError') {
+          setBadge('test-bt-request', 'NO DEVICE', 'warn');
+          log('User cancelled or no devices found: ' + e.message, 'warn');
+        } else if (e.name === 'SecurityError') {
+          setBadge('test-bt-request', 'BLOCKED', 'fail');
+          log('SecurityError — browser blocked BLE access: ' + e.message, 'error');
+        } else if (e.name === 'NotSupportedError') {
+          setBadge('test-bt-request', 'NOT SUPPORTED', 'fail');
+          log('NotSupportedError — requestDevice not supported: ' + e.message, 'error');
+        } else {
+          setBadge('test-bt-request', 'ERROR', 'fail');
+          log('requestDevice() error [' + e.name + ']: ' + e.message, 'error');
+        }
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Scan for BLE Devices';
+    }
+
+    // Also try scanning specifically for Tesla BLE services
+    // Tesla uses a custom GATT service UUID
+    async function testTeslaScan() {
+      if (!navigator.bluetooth) return;
+
+      try {
+        log('Attempting Tesla-specific BLE scan (custom service UUID)...', 'info');
+        // Tesla's known BLE service UUID from community research
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [{
+            services: ['00000211-b2d1-43f0-9b88-960cebf8b91e']
+          }]
+        });
+        log('🚗 Tesla vehicle found: ' + (device.name || 'unnamed') + ' (id: ' + device.id + ')', 'success');
+      } catch (e) {
+        log('Tesla-specific scan: ' + e.name + ' — ' + e.message, 'warn');
+      }
+    }
+
+    // Run auto-tests on load
+    gatherEnv();
+    testSecure();
+    const hasAPI = testBluetoothAPI();
+    if (hasAPI) {
+      testAvailability();
+    }
+  </script>
+</body>
+</html>
