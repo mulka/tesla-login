@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tesla Browser Feature Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      padding: 2rem;
+    }
+
+    .header {
+      max-width: 900px;
+      margin: 0 auto 2rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 0.4rem;
+    }
+
+    .subtitle { color: #888; font-size: 0.95rem; margin-bottom: 1.5rem; }
+
+    .env-box {
+      background: #0d0d1a;
+      border: 1px solid #1a1a2e;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-size: 0.78rem;
+      color: #666;
+      line-height: 1.8;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .summary-bar {
+      max-width: 900px;
+      margin: 0 auto 2rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .summary-item {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 0.85rem 1.25rem;
+      flex: 1;
+      min-width: 120px;
+      text-align: center;
+    }
+
+    .summary-item .num {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .summary-item .lbl {
+      font-size: 0.7rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 0.25rem;
+    }
+
+    .num.green { color: #4ade80; }
+    .num.red { color: #f87171; }
+    .num.yellow { color: #fbbf24; }
+    .num.blue { color: #60a5fa; }
+
+    .section {
+      max-width: 900px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.75rem;
+      padding-left: 0.25rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .card {
+      background: #111;
+      border: 1px solid #1c1c1c;
+      border-radius: 10px;
+      padding: 0.85rem 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .card .name {
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+
+    .card .desc {
+      font-size: 0.7rem;
+      color: #555;
+      margin-top: 0.15rem;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.3rem 0.7rem;
+      border-radius: 16px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .badge.yes { background: #0a3d1a; color: #4ade80; }
+    .badge.no { background: #3d0a0a; color: #f87171; }
+    .badge.partial { background: #3d2e0a; color: #fbbf24; }
+    .badge.info { background: #0a1a3d; color: #60a5fa; }
+
+    .copy-btn {
+      display: block;
+      max-width: 900px;
+      margin: 2rem auto;
+      background: #3e82f7;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.85rem 2rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+    }
+
+    .copy-btn:hover { background: #5a9bff; }
+
+    .back-link {
+      display: block;
+      max-width: 900px;
+      margin: 1.5rem auto 0;
+      font-size: 0.85rem;
+      color: #555;
+      text-decoration: none;
+    }
+
+    .back-link:hover { color: #888; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔬 Browser Feature Audit</h1>
+    <p class="subtitle">Comprehensive capability detection — optimized for Tesla's in-car browser</p>
+    <div class="env-box" id="envInfo">Detecting environment...</div>
+  </div>
+
+  <div class="summary-bar" id="summary"></div>
+  <div id="results"></div>
+
+  <button class="copy-btn" onclick="copyResults()">📋 Copy Results as Text</button>
+  <a class="back-link" href="index.html">← Back to Tesla Login</a>
+
+  <script>
+    // ── Feature definitions ──
+    const features = {
+
+      'Bluetooth & Connectivity': [
+        { name: 'Web Bluetooth', desc: 'BLE device communication', test: () => 'bluetooth' in navigator },
+        { name: 'Web NFC', desc: 'NFC tag read/write', test: () => 'NDEFReader' in window },
+        { name: 'Web USB', desc: 'Direct USB device access', test: () => 'usb' in navigator },
+        { name: 'Web Serial', desc: 'Serial port communication', test: () => 'serial' in navigator },
+        { name: 'Web HID', desc: 'Human interface devices', test: () => 'hid' in navigator },
+        { name: 'Web MIDI', desc: 'MIDI device access', test: () => 'requestMIDIAccess' in navigator },
+        { name: 'WebSocket', desc: 'Full-duplex communication', test: () => 'WebSocket' in window },
+        { name: 'WebTransport', desc: 'HTTP/3 transport API', test: () => 'WebTransport' in window },
+        { name: 'WebRTC', desc: 'Real-time peer communication', test: () => 'RTCPeerConnection' in window },
+        { name: 'Broadcast Channel', desc: 'Cross-tab messaging', test: () => 'BroadcastChannel' in window },
+      ],
+
+      'GPU & Graphics': [
+        { name: 'WebGPU', desc: 'Next-gen GPU compute & rendering', test: () => 'gpu' in navigator },
+        { name: 'WebGL 1.0', desc: 'OpenGL ES 2.0 in browser', test: () => {
+          try { return !!document.createElement('canvas').getContext('webgl'); } catch(e) { return false; }
+        }},
+        { name: 'WebGL 2.0', desc: 'OpenGL ES 3.0 in browser', test: () => {
+          try { return !!document.createElement('canvas').getContext('webgl2'); } catch(e) { return false; }
+        }},
+        { name: 'OffscreenCanvas', desc: 'Canvas in web workers', test: () => 'OffscreenCanvas' in window },
+        { name: 'WebGL Renderer', desc: 'GPU hardware info', test: () => {
+          try {
+            const c = document.createElement('canvas');
+            const gl = c.getContext('webgl');
+            if (!gl) return false;
+            const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+            return dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'yes (no debug info)';
+          } catch(e) { return false; }
+        }, isInfo: true },
+      ],
+
+      'Compute & Performance': [
+        { name: 'WebAssembly', desc: 'Near-native code execution', test: () => typeof WebAssembly === 'object' },
+        { name: 'WASM Threads', desc: 'SharedArrayBuffer for WASM', test: () => typeof SharedArrayBuffer !== 'undefined' },
+        { name: 'WASM SIMD', desc: 'SIMD instructions in WASM', test: async () => {
+          try {
+            // Minimal WASM module that uses SIMD
+            const bytes = new Uint8Array([0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,10,10,1,8,0,65,0,253,15,253,98,11]);
+            const mod = await WebAssembly.compile(bytes);
+            return true;
+          } catch(e) { return false; }
+        }},
+        { name: 'Web Workers', desc: 'Background threads', test: () => 'Worker' in window },
+        { name: 'Service Worker', desc: 'Offline & caching proxy', test: () => 'serviceWorker' in navigator },
+        { name: 'Shared Workers', desc: 'Shared background threads', test: () => 'SharedWorker' in window },
+        { name: 'Worklets (CSS Paint)', desc: 'CSS Houdini paint worklet', test: () => 'paintWorklet' in CSS },
+        { name: 'Atomics', desc: 'Shared memory atomics', test: () => typeof Atomics !== 'undefined' },
+        { name: 'Hardware Concurrency', desc: 'Logical CPU cores', test: () => navigator.hardwareConcurrency || false, isInfo: true },
+        { name: 'Device Memory', desc: 'Approximate RAM (GB)', test: () => navigator.deviceMemory || false, isInfo: true },
+      ],
+
+      'Sensors & Hardware': [
+        { name: 'Geolocation', desc: 'GPS / location', test: () => 'geolocation' in navigator },
+        { name: 'Accelerometer', desc: 'Motion sensor', test: () => 'Accelerometer' in window },
+        { name: 'Gyroscope', desc: 'Rotation sensor', test: () => 'Gyroscope' in window },
+        { name: 'Magnetometer', desc: 'Compass / magnetic field', test: () => 'Magnetometer' in window },
+        { name: 'Ambient Light', desc: 'Light level sensor', test: () => 'AmbientLightSensor' in window },
+        { name: 'Proximity Sensor', desc: 'Near-field detection', test: () => 'ProximitySensor' in window },
+        { name: 'AbsoluteOrientation', desc: 'Device orientation sensor', test: () => 'AbsoluteOrientationSensor' in window },
+        { name: 'DeviceMotion Event', desc: 'Legacy motion events', test: () => 'DeviceMotionEvent' in window },
+        { name: 'Gamepad API', desc: 'Game controller input', test: () => 'getGamepads' in navigator },
+        { name: 'Battery Status', desc: 'Battery level & charging', test: () => 'getBattery' in navigator },
+        { name: 'Vibration', desc: 'Haptic feedback', test: () => 'vibrate' in navigator },
+      ],
+
+      'Media & Capture': [
+        { name: 'getUserMedia', desc: 'Camera & microphone access', test: () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) },
+        { name: 'getDisplayMedia', desc: 'Screen capture', test: () => !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) },
+        { name: 'MediaRecorder', desc: 'Record audio/video streams', test: () => 'MediaRecorder' in window },
+        { name: 'Media Source Ext.', desc: 'Adaptive streaming (MSE)', test: () => 'MediaSource' in window },
+        { name: 'Encrypted Media Ext.', desc: 'DRM playback (EME)', test: () => 'requestMediaKeySystemAccess' in navigator },
+        { name: 'Web Audio', desc: 'Audio processing & synthesis', test: () => 'AudioContext' in window || 'webkitAudioContext' in window },
+        { name: 'Web Codecs', desc: 'Low-level media encoding', test: () => 'VideoEncoder' in window },
+        { name: 'Speech Recognition', desc: 'Voice to text', test: () => 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window },
+        { name: 'Speech Synthesis', desc: 'Text to speech', test: () => 'speechSynthesis' in window },
+        { name: 'Picture-in-Picture', desc: 'Floating video player', test: () => 'pictureInPictureEnabled' in document },
+      ],
+
+      'Authentication & Security': [
+        { name: 'Web Crypto', desc: 'Cryptographic operations', test: () => !!(window.crypto && window.crypto.subtle) },
+        { name: 'WebAuthn / FIDO2', desc: 'Passkey / biometric auth', test: () => !!(navigator.credentials && window.PublicKeyCredential) },
+        { name: 'Credential Mgmt', desc: 'Password / credential API', test: () => 'credentials' in navigator },
+        { name: 'Secure Context', desc: 'HTTPS environment', test: () => window.isSecureContext },
+        { name: 'Crypto.randomUUID', desc: 'Native UUID generation', test: () => !!(crypto && crypto.randomUUID) },
+        { name: 'SubtleCrypto', desc: 'AES, RSA, ECDSA, etc.', test: () => !!(window.crypto && window.crypto.subtle && window.crypto.subtle.generateKey) },
+      ],
+
+      'Storage & Persistence': [
+        { name: 'IndexedDB', desc: 'Client-side database', test: () => 'indexedDB' in window },
+        { name: 'localStorage', desc: 'Synchronous key-value', test: () => { try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return true; } catch(e) { return false; } }},
+        { name: 'sessionStorage', desc: 'Tab-scoped storage', test: () => { try { sessionStorage.setItem('_t','1'); sessionStorage.removeItem('_t'); return true; } catch(e) { return false; } }},
+        { name: 'Cache API', desc: 'Request/response cache', test: () => 'caches' in window },
+        { name: 'File System Access', desc: 'Read/write local files', test: () => 'showOpenFilePicker' in window },
+        { name: 'OPFS', desc: 'Origin Private File System', test: () => !!(navigator.storage && navigator.storage.getDirectory) },
+        { name: 'Storage Estimate', desc: 'Quota info', test: async () => {
+          try {
+            const est = await navigator.storage.estimate();
+            return Math.round((est.quota || 0) / 1048576) + ' MB quota';
+          } catch(e) { return false; }
+        }, isInfo: true },
+        { name: 'Cookies', desc: 'HTTP cookie support', test: () => navigator.cookieEnabled },
+      ],
+
+      'Networking & Protocols': [
+        { name: 'Fetch API', desc: 'Modern HTTP requests', test: () => 'fetch' in window },
+        { name: 'Streams API', desc: 'ReadableStream / WritableStream', test: () => 'ReadableStream' in window },
+        { name: 'Compression Streams', desc: 'Gzip / deflate in JS', test: () => 'CompressionStream' in window },
+        { name: 'Beacon API', desc: 'Reliable background POST', test: () => 'sendBeacon' in navigator },
+        { name: 'Server-Sent Events', desc: 'EventSource streaming', test: () => 'EventSource' in window },
+        { name: 'Network Information', desc: 'Connection type & speed', test: () => 'connection' in navigator },
+        { name: 'Background Fetch', desc: 'Download in background', test: () => 'BackgroundFetchManager' in window },
+        { name: 'Background Sync', desc: 'Deferred sync', test: () => 'SyncManager' in window },
+      ],
+
+      'UI & Platform': [
+        { name: 'Fullscreen API', desc: 'Enter fullscreen mode', test: () => 'fullscreenEnabled' in document || 'webkitFullscreenEnabled' in document },
+        { name: 'Notifications', desc: 'Push notifications', test: () => 'Notification' in window },
+        { name: 'Push API', desc: 'Server push messaging', test: () => 'PushManager' in window },
+        { name: 'Clipboard API', desc: 'Read/write clipboard', test: () => !!(navigator.clipboard && navigator.clipboard.writeText) },
+        { name: 'Share API', desc: 'Native share dialog', test: () => 'share' in navigator },
+        { name: 'Wake Lock', desc: 'Prevent screen sleep', test: () => 'wakeLock' in navigator },
+        { name: 'Page Visibility', desc: 'Tab active/hidden detection', test: () => 'visibilityState' in document },
+        { name: 'ResizeObserver', desc: 'Element resize detection', test: () => 'ResizeObserver' in window },
+        { name: 'IntersectionObserver', desc: 'Scroll visibility detection', test: () => 'IntersectionObserver' in window },
+        { name: 'View Transitions', desc: 'Animated DOM transitions', test: () => 'startViewTransition' in document },
+        { name: 'Dialog Element', desc: 'Native modal dialogs', test: () => 'HTMLDialogElement' in window },
+        { name: 'Popover API', desc: 'Native popover support', test: () => 'popover' in HTMLElement.prototype },
+      ],
+
+      'Modern JS & APIs': [
+        { name: 'ES Modules', desc: 'import/export support', test: () => 'noModule' in HTMLScriptElement.prototype },
+        { name: 'Proxy', desc: 'Object metaprogramming', test: () => typeof Proxy !== 'undefined' },
+        { name: 'WeakRef', desc: 'Weak references', test: () => typeof WeakRef !== 'undefined' },
+        { name: 'Temporal', desc: 'Modern date/time API', test: () => typeof Temporal !== 'undefined' },
+        { name: 'Structured Clone', desc: 'Deep copy objects', test: () => typeof structuredClone === 'function' },
+        { name: 'Intl.Segmenter', desc: 'Text segmentation', test: () => typeof Intl !== 'undefined' && 'Segmenter' in Intl },
+        { name: 'URL Pattern', desc: 'URL pattern matching', test: () => 'URLPattern' in window },
+        { name: 'Trusted Types', desc: 'DOM XSS prevention', test: () => 'trustedTypes' in window },
+        { name: 'Import Maps', desc: 'Module resolution maps', test: () => HTMLScriptElement.supports && HTMLScriptElement.supports('importmap') },
+      ],
+
+      'XR & Spatial': [
+        { name: 'WebXR', desc: 'VR/AR device API', test: () => 'xr' in navigator },
+        { name: 'WebXR AR Module', desc: 'AR session support', test: async () => {
+          try {
+            if (!navigator.xr) return false;
+            return await navigator.xr.isSessionSupported('immersive-ar');
+          } catch(e) { return false; }
+        }},
+        { name: 'WebXR VR Module', desc: 'VR session support', test: async () => {
+          try {
+            if (!navigator.xr) return false;
+            return await navigator.xr.isSessionSupported('immersive-vr');
+          } catch(e) { return false; }
+        }},
+      ],
+    };
+
+    // ── Run tests ──
+    const allResults = [];
+    let yesCount = 0, noCount = 0, infoCount = 0;
+
+    async function runAllTests() {
+      const resultsEl = document.getElementById('results');
+      resultsEl.innerHTML = '';
+
+      yesCount = 0; noCount = 0; infoCount = 0;
+      allResults.length = 0;
+
+      for (const [section, tests] of Object.entries(features)) {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = 'section';
+        sectionDiv.innerHTML = `<div class="section-title">${section}</div><div class="grid" id="grid-${section.replace(/\W/g,'')}"></div>`;
+        resultsEl.appendChild(sectionDiv);
+        const grid = sectionDiv.querySelector('.grid');
+
+        for (const feat of tests) {
+          let result;
+          try {
+            result = await feat.test();
+          } catch(e) {
+            result = false;
+          }
+
+          let badgeText, badgeClass;
+
+          if (feat.isInfo && result && result !== true && result !== false) {
+            badgeText = String(result);
+            badgeClass = 'info';
+            infoCount++;
+            allResults.push({ section, name: feat.name, status: badgeText });
+          } else if (result === true || (result && !feat.isInfo)) {
+            badgeText = '✓ Yes';
+            badgeClass = 'yes';
+            yesCount++;
+            allResults.push({ section, name: feat.name, status: 'YES' });
+          } else {
+            badgeText = '✗ No';
+            badgeClass = 'no';
+            noCount++;
+            allResults.push({ section, name: feat.name, status: 'NO' });
+          }
+
+          grid.innerHTML += `
+            <div class="card">
+              <div>
+                <div class="name">${feat.name}</div>
+                <div class="desc">${feat.desc}</div>
+              </div>
+              <span class="badge ${badgeClass}">${badgeText}</span>
+            </div>`;
+        }
+      }
+
+      // Summary
+      const total = yesCount + noCount + infoCount;
+      document.getElementById('summary').innerHTML = `
+        <div class="summary-item"><div class="num blue">${total}</div><div class="lbl">Total Tested</div></div>
+        <div class="summary-item"><div class="num green">${yesCount}</div><div class="lbl">Supported</div></div>
+        <div class="summary-item"><div class="num red">${noCount}</div><div class="lbl">Not Supported</div></div>
+        <div class="summary-item"><div class="num yellow">${Math.round(yesCount/(yesCount+noCount)*100)}%</div><div class="lbl">Support Rate</div></div>
+      `;
+    }
+
+    // ── Environment info ──
+    function gatherEnv() {
+      const lines = [];
+      lines.push('UA: ' + navigator.userAgent);
+      lines.push('Platform: ' + (navigator.platform || navigator.userAgentData?.platform || 'unknown'));
+      lines.push('Language: ' + navigator.language);
+      lines.push('Screen: ' + screen.width + '×' + screen.height + ' @ ' + (window.devicePixelRatio || 1) + 'x');
+      lines.push('Viewport: ' + window.innerWidth + '×' + window.innerHeight);
+      lines.push('Color Depth: ' + screen.colorDepth + '-bit');
+      lines.push('Touch: ' + (navigator.maxTouchPoints || 0) + ' points');
+      lines.push('Protocol: ' + location.protocol);
+      lines.push('Secure: ' + window.isSecureContext);
+      if (navigator.connection) {
+        lines.push('Connection: ' + (navigator.connection.effectiveType || 'unknown') + (navigator.connection.downlink ? ' (' + navigator.connection.downlink + ' Mbps)' : ''));
+      }
+      lines.push('Cookies: ' + navigator.cookieEnabled);
+      lines.push('DNT: ' + (navigator.doNotTrack || 'unset'));
+      lines.push('Timestamp: ' + new Date().toISOString());
+      document.getElementById('envInfo').textContent = lines.join('\n');
+    }
+
+    // ── Copy to clipboard ──
+    function copyResults() {
+      const env = document.getElementById('envInfo').textContent;
+      let text = '=== BROWSER FEATURE AUDIT ===\n\n';
+      text += env + '\n\n';
+      text += `Score: ${yesCount}/${yesCount + noCount} (${Math.round(yesCount/(yesCount+noCount)*100)}%)\n\n`;
+
+      let lastSection = '';
+      for (const r of allResults) {
+        if (r.section !== lastSection) {
+          text += `\n── ${r.section} ──\n`;
+          lastSection = r.section;
+        }
+        const icon = r.status === 'YES' ? '✓' : r.status === 'NO' ? '✗' : 'ℹ';
+        text += `${icon} ${r.name}: ${r.status}\n`;
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = document.querySelector('.copy-btn');
+          btn.textContent = '✓ Copied!';
+          setTimeout(() => btn.textContent = '📋 Copy Results as Text', 2000);
+        }).catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;left:-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => btn.textContent = '📋 Copy Results as Text', 2000);
+    }
+
+    // ── Init ──
+    gatherEnv();
+    runAllTests();
+  </script>
+</body>
+</html>
